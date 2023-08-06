@@ -1,23 +1,23 @@
 <script setup lang="ts">
-  import useFirstLesson from '~/composables/useFirstLesson';
+  import UserCard from '~/components/UserCard.vue';
 
   const { chapters, title } = useCourse();
 
   const resetError = async (error: any) => {
-    const firstLesson = useFirstLesson();
-    await navigateTo(firstLesson.path);
+    await navigateTo('/course/chapter/1-chapter-1/lesson/1-introduction-to-typescript-with-vue-js-3');
     error.value = null;
   }
 </script>
 
 <template>
   <div>
-    <div class="prose mb-12">
-      <h1>
+    <div class="mb-4 flex justify-between items-center w-full">
+      <h1 class="text-3xl">
         <span class="font-medium">
           <span class="font-bold">{{ title }}</span>
         </span>
       </h1>
+      <UserCard />
     </div>
 
     <div class="flex flex-row justify-center flex-grow">

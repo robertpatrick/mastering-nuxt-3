@@ -4,8 +4,9 @@ import { defineComponent } from 'vue';
 export default defineComponent({
   name: 'index',
   data() {
+    const firstLesson = useFirstLesson()
     return {
-      firstLesson: useFirstLesson()
+      firstLesson
     };
   },
 });
@@ -15,7 +16,7 @@ export default defineComponent({
   <div>
     <NuxtLink
       class="underline font-medium"
-      :href="firstLession.path"
+      :href="firstLesson.path"
     >
       Go to first lesson
     </NuxtLink>
