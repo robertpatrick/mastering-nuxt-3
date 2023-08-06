@@ -1,16 +1,21 @@
 <script setup lang="ts">
-  const { chapters } = useCourse();
+  import useFirstLesson from '~/composables/useFirstLesson';
+
+  const { chapters, title } = useCourse();
+
+  const resetError = async (error: any) => {
+    const firstLesson = useFirstLesson();
+    await navigateTo(firstLesson.path);
+    error.value = null;
+  }
 </script>
 
 <template>
-  <div
-    class="p-12 bg-gray-100 w-full h-full min-h-screen flex flex-col items-center"
-  >
+  <div>
     <div class="prose mb-12">
       <h1>
         <span class="font-medium">
-          Course:
-          <span class="font-bold">Mastering Nuxt 3</span>
+          <span class="font-bold">{{ title }}</span>
         </span>
       </h1>
     </div>
@@ -45,7 +50,20 @@
       </div>
 
       <div class="prose p-12 bg-white rounded-md w-[65ch]">
-        <NuxtPage />
+        <NuxtErrorBoundary>
+          <NuxtPage />
+          <template #error="{ error }">
+            <p>Oh no, something went wrong with the lesson: <code>{{ error }}</code></p>
+            <p>
+              <button
+                class="hover:cursor-pointer bg-gray-500 text-white font-bold py-1 px-3 rounded"
+                @click="resetError(error)"
+              >
+                Reset
+              </button>
+            </p>
+          </template>
+        </NuxtErrorBoundary>
       </div>
     </div>
   </div>

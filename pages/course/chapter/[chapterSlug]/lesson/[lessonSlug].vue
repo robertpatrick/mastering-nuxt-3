@@ -2,6 +2,30 @@
 import { useCourse } from '~/composables/useCourse';
 import VideoPlayer from '~/components/VideoPlayer.vue';
 
+definePageMeta({
+  middleware: [
+    function(to, from) {
+      const course = useCourse();
+      const chapter = course.chapters.find((chapter) => chapter.slug === to.params.chapterSlug);
+      if (!chapter) {
+        return abortNavigation(createError({
+          statusCode: 404,
+          message: `Chapter ${to.params.chapterSlug} not found`,
+        }));
+      }
+
+      const lesson = chapter.lessons.find((lesson) => lesson.slug === to.params.lessonSlug);
+      if (!lesson) {
+        return abortNavigation(createError({
+          statusCode: 404,
+          message: `Lesson ${to.params.lessonSlug} not found`,
+        }));
+      }
+    },
+    'auth'
+  ],
+})
+
 const course = useCourse();
 const route = useRoute();
 
@@ -10,12 +34,22 @@ const chapter = computed(() => {
 });
 
 const lesson = computed(() => {
-  return chapter?.value?.lessons.find((lesson) => lesson.slug === route.params.lessonSlug);
+  // The route middleware defined for the page prevents this from ever being null so
+  // tell the TypeScript compiler to ignore this.
+  //
+  // @ts-ignore: Object is possibly 'null'.
+  return chapter.value.lessons.find((lesson) => lesson.slug === route.params.lessonSlug);
 });
 
 const title = computed(() => {
-  return `${lesson?.value?.title} - ${course.title}`;
-})
+  if (!lesson.value) {
+    throw createError({
+      statusCode: 404,
+      message: `Lesson ${route.params.lessonSlug} not found in Chapter ${route.params.chapterSlug}`,
+    });
+  }
+  return `${lesson.value.title} - ${course.title}`;
+});
 
 const chapterIndex = computed(() => {
   return (chapter?.value?.number || 0) - 1;
@@ -82,7 +116,7 @@ const toggleComplete = () => {
     <p>{{ lesson.text }}</p>
     <LessonCompleteButton
       :model-value="isLessonComplete"
-      @update:model-value="toggleComplete"
+      @update:model-value="throw createError('Could not update');"
     />
   </div>
 </template>
