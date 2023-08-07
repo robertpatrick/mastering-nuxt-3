@@ -1,40 +1,34 @@
-<script lang="ts">
-import { defineComponent } from 'vue';
+<script setup lang="ts">
+const user = useSupabaseUser();
+const { auth } = useSupabaseClient();
 
-export default defineComponent({
-  name: 'UserCard',
-  components: { },
-  props: { },
-  data() {
-    const auth = useSupabaseClient()?.auth;
-    const user = useSupabaseUser();
-
-    return {
-      auth,
-      user,
-    };
-  },
-  computed: {
-    name: () => {
-      return this.user.value?.user_metadata.full_name;
-    },
-    profile: () => {
-      return this.user.value?.user_metadata.avatar_url;
-    },
-  },
-  methods: {
-    logout: async () => {
-      const { error } = await this.auth.signOut();
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      await navigateTo('/login');
-    }
+const logout = async () => {
+  const { error } = await auth.signOut();
+  if (error) {
+    console.error(error);
+    return;
   }
-});
+
+  // The Nuxt Supabase auth *should* be doing this
+  // for us, but it isn't for some reason.
+  try {
+    await $fetch('/api/_supabase/session', {
+      method: 'POST',
+      body: { event: 'SIGNED_OUT', session: null },
+    });
+    user.value = null;
+  } catch (e) {
+    console.error(error);
+  }
+  await navigateTo('/login');
+};
+
+const name = computed(
+  () => user.value?.user_metadata.full_name
+);
+const profile = computed(
+  () => user.value?.user_metadata.avatar_url
+);
 </script>
 
 <template>
@@ -48,9 +42,7 @@ export default defineComponent({
     />
     <div class="text-right">
       <div class="font-medium">{{ name }}</div>
-      <button class="text-sm underline text-slate-500" @click="logout">
-        Log out
-      </button>
+      <button class="text-sm underline text-slate-500" @click="logout">Log out</button>
     </div>
   </div>
 </template>
